@@ -136,38 +136,41 @@ public class VideoProcessorService : BackgroundService
     [SupportedOSPlatform("windows")]
     private async Task ProcessFramesWindowsOnly(string framesDir, UploadMsg payload, CancellationToken stoppingToken)
     {
-        var reader = new BarcodeReader
-        {
-            AutoRotate = true,
-            TryInverted = true,
-            Options = new DecodingOptions
-            {
-                PossibleFormats = new List<BarcodeFormat> { BarcodeFormat.QR_CODE },
-                TryHarder = true
-            }
-        };
-        var results = new List<QRCodeResult>();
         var files = Directory.GetFiles(framesDir, "*.png").OrderBy(f => f).ToArray();
+        var resultsBag = new System.Collections.Concurrent.ConcurrentBag<QRCodeResult>();
+        var options = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
 
-        int index = 0;
-        foreach (var f in files)
+        int idx = -1;
+        Parallel.ForEach(files, options, filePath =>
         {
-            index++;
+            int frameIndex = Interlocked.Increment(ref idx) + 1;
             try
             {
-                using var bmp = (Bitmap)Image.FromFile(f);
-                var res = reader.Decode(bmp);
+                using var bmp = (Bitmap)Image.FromFile(filePath);
+                var localReader = new BarcodeReader
+                {
+                    AutoRotate = true,
+                    TryInverted = true,
+                    Options = new DecodingOptions
+                    {
+                        PossibleFormats = new List<BarcodeFormat> { BarcodeFormat.QR_CODE },
+                        TryHarder = true
+                    }
+                };
+                var res = localReader.Decode(bmp);
                 if (res != null)
                 {
-                    results.Add(new QRCodeResult(res.Text, index - 1));
-                    _logger.LogInformation("QR detectado em {Frame}: {Text}", f, res.Text);
+                    resultsBag.Add(new QRCodeResult(res.Text, frameIndex - 1));
+                    _logger.LogInformation("QR detectado em {Frame}: {Text}", filePath, res.Text);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Falha ao ler frame {File}", f);
+                _logger.LogWarning(ex, "Falha ao ler frame {File}", filePath);
             }
-        }
+        });
+
+        var results = resultsBag.OrderBy(r => r.TimestampSeconds).ToList();
 
         var outDir = Path.Combine(Path.GetDirectoryName(payload.Path) ?? ".", "results");
         Directory.CreateDirectory(outDir);

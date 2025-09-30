@@ -5,27 +5,29 @@ using Microsoft.AspNetCore.Http;
 using System.IO;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System;
-using System.Text;
 
 namespace VideoApi.Benchmarks
 {
     [MemoryDiagnoser]
     public class VideoControllerUploadBenchmark
     {
-        private VideoController _controller;
-        private InMemoryStore _store;
-        private ILogger<VideoController> _logger;
-        private IConfiguration _config;
+        private VideoController _controller = default!;
+        private InMemoryStore _store = default!;
+        private ILogger<VideoController> _logger = default!;
+        private IConfiguration _config = default!;
 
         [GlobalSetup]
         public void Setup()
         {
             _store = new InMemoryStore();
             _logger = new LoggerFactory().CreateLogger<VideoController>();
-            _config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string> {
-                {"RabbitMQ:Host", "localhost"}
-            }).Build();
+            _config = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    { "RabbitMQ:Host", "localhost" }
+                })
+                .Build();
+
             _controller = new VideoController(_store, _logger, _config);
         }
 
@@ -33,8 +35,12 @@ namespace VideoApi.Benchmarks
         public async Task UploadBenchmark()
         {
             using var content = new MemoryStream(new byte[1024 * 1024]); // 1MB
+            content.Position = 0;
+
             var file = new FormFile(content, 0, content.Length, "file", "test.mp4");
-            await _controller.Upload(file);
+            var form = new VideoController.FileForm { File = file };
+
+            await _controller.Upload(form);
         }
     }
 }

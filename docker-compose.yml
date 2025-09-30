@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management-windows
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+  api:
+    build:
+      context: .
+      dockerfile: src/VideoApi/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - RabbitMQ__Host=rabbitmq
+    depends_on:
+      - rabbitmq
+    ports:
+      - "5032:5032"
+  worker:
+    build:
+      context: .
+      dockerfile: src/VideoWorker/Dockerfile
+    environment:
+      - RabbitMQ__Host=rabbitmq
+    depends_on:
+      - rabbitmq

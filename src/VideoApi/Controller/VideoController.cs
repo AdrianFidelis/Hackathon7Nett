@@ -14,6 +14,12 @@ public class VideoController : ControllerBase
     private readonly ILogger<VideoController> _logger;
     private readonly IConfiguration _config;
 
+    // DTO para upload via multipart/form-data (resolve erro do Swagger)
+    public sealed class FileForm
+    {
+        public IFormFile File { get; set; } = default!;
+    }
+
     public VideoController(InMemoryStore store, ILogger<VideoController> logger, IConfiguration config)
     {
         _store = store;
@@ -22,9 +28,11 @@ public class VideoController : ControllerBase
     }
 
     [HttpPost("upload")]
+    [Consumes("multipart/form-data")]
     [RequestSizeLimit(1_000_000_000)]
-    public async Task<IActionResult> Upload(IFormFile file)
+    public async Task<IActionResult> Upload([FromForm] FileForm form)
     {
+        var file = form.File;
         if (file == null || file.Length == 0)
             return BadRequest("Arquivo inválido");
 
@@ -34,9 +42,7 @@ public class VideoController : ControllerBase
         var filePath = Path.Combine(uploads, id + Path.GetExtension(file.FileName));
 
         using (var fs = System.IO.File.Create(filePath))
-        {
             await file.CopyToAsync(fs);
-        }
 
         _store.Statuses[id] = new ProcessStatus(id, "Na Fila");
 
@@ -48,14 +54,9 @@ public class VideoController : ControllerBase
         await channel.QueueDeclareAsync("video_queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
 
         var message = System.Text.Json.JsonSerializer.Serialize(new { Id = id, Path = filePath });
-        var messageBody = Encoding.UTF8.GetBytes(message);
+        var body = Encoding.UTF8.GetBytes(message);
 
-        await channel.BasicPublishAsync(
-            exchange: "",
-            routingKey: "video_queue",
-            mandatory: false,
-            body: messageBody
-        );
+        await channel.BasicPublishAsync(exchange: "", routingKey: "video_queue", mandatory: false, body: body);
 
         return Accepted(new { id });
     }
@@ -72,27 +73,23 @@ public class VideoController : ControllerBase
         }
 
         if (_store.Statuses.TryGetValue(id, out var s)) return Ok(s);
-
         return NotFound();
     }
 
-	[HttpGet("results/{id}")]
-	public IActionResult Results(string id)
-	{
-		if (_store.Results.TryGetValue(id, out var list)) return Ok(list);
+    [HttpGet("results/{id}")]
+    public IActionResult Results(string id)
+    {
+        if (_store.Results.TryGetValue(id, out var list)) return Ok(list);
 
-		// Apontar para uploads/results (onde o worker grava)
-		var uploads = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
-		var resultsDir = Path.Combine(uploads, "results");
-		Directory.CreateDirectory(resultsDir);
-
-		var file = Path.Combine(resultsDir, id + ".json");
-		if (System.IO.File.Exists(file))
-		{
-			var json = System.IO.File.ReadAllText(file);
-			return Content(json, "application/json");
-		}
-		return Ok(Array.Empty<object>());
-	}
+        var resultsDir = Path.Combine(Directory.GetCurrentDirectory(), "results");
+        Directory.CreateDirectory(resultsDir);
+        var file = Path.Combine(resultsDir, id + ".json");
+        if (System.IO.File.Exists(file))
+        {
+            var json = System.IO.File.ReadAllText(file);
+            return Content(json, "application/json");
+        }
+        return Ok(Array.Empty<object>());
+    }
 }
 
