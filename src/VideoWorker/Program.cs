@@ -1,12 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-var host = Host.CreateDefaultBuilder(args)
-    .ConfigureServices((context, services) =>
+Host.CreateDefaultBuilder(args)
+    .ConfigureServices(services =>
     {
-        services.AddSingleton(context.Configuration);
-        services.AddHostedService<VideoProcessorService>();
+        services.AddHostedService<VideoProcessorService>(); // Worker real
+        // Não registra o Worker de template (classe Worker) para evitar duplicidade
     })
-    .Build();
-
-await host.RunAsync();
+    .Build()
+    .Run();

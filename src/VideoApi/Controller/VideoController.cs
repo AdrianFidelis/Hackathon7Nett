@@ -64,31 +64,52 @@ public class VideoController : ControllerBase
     [HttpGet("status/{id}")]
     public IActionResult Status(string id)
     {
-        var statusDir = Path.Combine(Directory.GetCurrentDirectory(), "status");
-        var statusFile = Path.Combine(statusDir, id + ".json");
-        if (System.IO.File.Exists(statusFile))
+        // 1) Tenta arquivo (status/ e uploads/status/)
+        var baseDir = Directory.GetCurrentDirectory();
+        var statusCandidates = new[]
         {
-            var json = System.IO.File.ReadAllText(statusFile);
-            return Content(json, "application/json");
+            Path.Combine(baseDir, "status", id + ".json"),
+            Path.Combine(baseDir, "uploads", "status", id + ".json")
+        };
+
+        foreach (var path in statusCandidates)
+        {
+            if (System.IO.File.Exists(path))
+            {
+                var json = System.IO.File.ReadAllText(path);
+                return Content(json, "application/json");
+            }
         }
 
+        // 2) Fallback: memória
         if (_store.Statuses.TryGetValue(id, out var s)) return Ok(s);
+
         return NotFound();
     }
 
     [HttpGet("results/{id}")]
     public IActionResult Results(string id)
     {
+        // 1) Tenta arquivo (uploads/results/ e results/)
+        var baseDir = Directory.GetCurrentDirectory();
+        var resultCandidates = new[]
+        {
+            Path.Combine(baseDir, "uploads", "results", id + ".json"),
+            Path.Combine(baseDir, "results", id + ".json")
+        };
+
+        foreach (var path in resultCandidates)
+        {
+            if (System.IO.File.Exists(path))
+            {
+                var json = System.IO.File.ReadAllText(path);
+                return Content(json, "application/json");
+            }
+        }
+
+        // 2) Fallback: memória
         if (_store.Results.TryGetValue(id, out var list)) return Ok(list);
 
-        var resultsDir = Path.Combine(Directory.GetCurrentDirectory(), "results");
-        Directory.CreateDirectory(resultsDir);
-        var file = Path.Combine(resultsDir, id + ".json");
-        if (System.IO.File.Exists(file))
-        {
-            var json = System.IO.File.ReadAllText(file);
-            return Content(json, "application/json");
-        }
         return Ok(Array.Empty<object>());
     }
 }

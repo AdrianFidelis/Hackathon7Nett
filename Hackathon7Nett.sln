@@ -1,13 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11018.127 d18.0
+VisualStudioVersion = 18.0.11018.127
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoApi", "src\VideoApi\VideoApi.csproj", "{082E002E-AB95-4DB2-9CFE-1E1951D50534}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoWorker", "src\VideoWorker\VideoWorker.csproj", "{66ADC46C-CDC6-4555-951F-D043CBAD0F14}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VideoApi.Tests", "tests\VideoApi.Tests\VideoApi.Tests.csproj", "{2A9D993F-D0BD-415C-AD8B-CB91C83F8A48}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,6 +47,18 @@ Global
 		{66ADC46C-CDC6-4555-951F-D043CBAD0F14}.Release|x64.Build.0 = Release|Any CPU
 		{66ADC46C-CDC6-4555-951F-D043CBAD0F14}.Release|x86.ActiveCfg = Release|Any CPU
 		{66ADC46C-CDC6-4555-951F-D043CBAD0F14}.Release|x86.Build.0 = Release|Any CPU
+		{2A9D993F-D0BD-415C-AD8B-CB91C83F8A48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A9D993F-D0BD-415C-AD8B-CB91C83F8A48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A9D993F-D0BD-415C-AD8B-CB91C83F8A48}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2A9D993F-D0BD-415C-AD8B-CB91C83F8A48}.Debug|x64.Build.0 = Debug|Any CPU
+		{2A9D993F-D0BD-415C-AD8B-CB91C83F8A48}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2A9D993F-D0BD-415C-AD8B-CB91C83F8A48}.Debug|x86.Build.0 = Debug|Any CPU
+		{2A9D993F-D0BD-415C-AD8B-CB91C83F8A48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A9D993F-D0BD-415C-AD8B-CB91C83F8A48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A9D993F-D0BD-415C-AD8B-CB91C83F8A48}.Release|x64.ActiveCfg = Release|Any CPU
+		{2A9D993F-D0BD-415C-AD8B-CB91C83F8A48}.Release|x64.Build.0 = Release|Any CPU
+		{2A9D993F-D0BD-415C-AD8B-CB91C83F8A48}.Release|x86.ActiveCfg = Release|Any CPU
+		{2A9D993F-D0BD-415C-AD8B-CB91C83F8A48}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -50,6 +66,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{082E002E-AB95-4DB2-9CFE-1E1951D50534} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{66ADC46C-CDC6-4555-951F-D043CBAD0F14} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{2A9D993F-D0BD-415C-AD8B-CB91C83F8A48} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {048844E3-CA85-4DF6-8615-A6ECEF602DFA}

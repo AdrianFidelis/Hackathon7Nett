@@ -48,7 +48,7 @@ public class VideoProcessorService : BackgroundService
     {
         if (_channel is null) throw new InvalidOperationException("Channel not initialized");
 
-        var consumer = new AsyncEventingBasicConsumer(_channel);
+        var consumer = new AsyncEventingBasicConsumer(_channel);    
 
         consumer.ReceivedAsync += async (_, ea) =>
         {
@@ -60,7 +60,8 @@ public class VideoProcessorService : BackgroundService
                 var payload = JsonSerializer.Deserialize<UploadMsg>(message);
                 if (payload is null || string.IsNullOrWhiteSpace(payload.Id) || string.IsNullOrWhiteSpace(payload.Path))
                 {
-                    _logger.LogWarning("Payload inválido");
+                    _logger.LogWarning("Payload inválido"); 
+
                     await _channel!.BasicAckAsync(ea.DeliveryTag, false);
                     return;
                 }
@@ -76,10 +77,24 @@ public class VideoProcessorService : BackgroundService
                 RunOrThrow("ffmpeg", ffArgs);
                 _logger.LogInformation("Frames extraídos em {Dir}", framesDir);
 
-                // Adicione o atributo SupportedOSPlatform para garantir que BarcodeReader só seja usado no Windows
-                await ProcessFramesWindowsOnly(framesDir, payload, stoppingToken);
+                try
+                {
+                    if (!OperatingSystem.IsWindows())
+                    {
+                        UpdateStatus(payload.Id, "Erro: processamento suportado apenas no Windows");
+                        await _channel!.BasicAckAsync(ea.DeliveryTag, false);
+                        return;
+                    }
 
-                await _channel!.BasicAckAsync(ea.DeliveryTag, false);
+                    await ProcessFramesWindowsOnly(framesDir, payload, stoppingToken);
+                    await _channel!.BasicAckAsync(ea.DeliveryTag, false);
+                }
+                catch (Exception ex2)
+                {
+                    UpdateStatus(payload.Id, "Erro");
+                    _logger.LogError(ex2, "Erro no pipeline de processamento");
+                    await _channel!.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false);
+                }
             }
             catch (Exception ex)
             {

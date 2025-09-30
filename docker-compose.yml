@@ -1,21 +1,25 @@
 version: "3.9"
 services:
   rabbitmq:
-    image: rabbitmq:3.13-management-windows
+    image: rabbitmq:3-management
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # Management UI
   api:
     build:
       context: .
       dockerfile: src/VideoApi/Dockerfile
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
       - RabbitMQ__Host=rabbitmq
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "8080:8080"
     depends_on:
       - rabbitmq
-    ports:
-      - "5032:5032"
+    volumes:
+      - uploads:/app/uploads
+      - results:/app/results
+      - status:/app/status
   worker:
     build:
       context: .
@@ -24,3 +28,11 @@ services:
       - RabbitMQ__Host=rabbitmq
     depends_on:
       - rabbitmq
+    volumes:
+      - uploads:/app/uploads
+      - results:/app/results
+      - status:/app/status
+volumes:
+  uploads:
+  results:
+  status:

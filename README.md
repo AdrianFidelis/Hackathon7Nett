@@ -1,18 +1,20 @@
-# Visionary Analytics - Video QR Analyzer (MVP)
+    # Video QR Processor (API + Worker)
 
-- .NET 9, RabbitMQ, Worker Service, ZXing.
-- Fluxo: Upload -> Mensageria -> Worker extrai frames (1 fps) c/ ffmpeg -> ZXing detecta QR -> results/{id}.json.
-- Endpoints:
-  - POST /api/video/upload (multipart/form-data) -> { id }
-  - GET /api/video/status/{id}
-  - GET /api/video/results/{id}
+## Visão geral
+- API recebe upload de vídeos e publica mensagens no RabbitMQ.
+- Worker consome, extrai frames com `ffmpeg` e tenta ler QR Codes (ZXing).
+- Resultados e status são expostos via arquivos JSON e endpoints.
 
-## Rodando local
-- dotnet run em src/VideoApi e src/VideoWorker; suba RabbitMQ.
+## Arquitetura
+- API: ASP.NET Core (.NET 9)
+- Worker: .NET Worker Service (`BackgroundService`)
+- Fila: RabbitMQ
+- Dependências: `ffmpeg`, ZXing
 
-## Docker (Windows Containers)
-- Docker Desktop em modo Windows Containers
-- docker-compose up -d
+## Requisitos
+- .NET 9 SDK
+- RabbitMQ (ou via Docker Compose)
+- ffmpeg no PATH (para execução local do Worker)
+- Windows para leitura de QR (limitação do `System.Drawing` + `ZXing.Windows.Compatibility`)
 
-## CI
-- GitHub Actions (build + test).
+## Como executar (docker-compose)
